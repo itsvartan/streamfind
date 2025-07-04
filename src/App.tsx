@@ -214,19 +214,19 @@ function App() {
       371: 'Apple TV+',
       389: 'Paramount+',
       386: 'Peacock',
-      26: 'Hulu' // Adding Hulu's actual ID
+      26: 'Hulu', // Hulu's actual ID
+      // Add more common service IDs
+      444: 'Tubi',
+      349: 'Vudu',
+      73: 'YouTube'
     };
 
     const uniqueSources = new Set<string>();
     
     if (Array.isArray(sources)) {
       sources.forEach(source => {
-        // Log to debug what we're receiving
-        if (source.source_id && !serviceMap[source.source_id]) {
-          console.log('Unknown source ID:', source.source_id, source);
-        }
-        
-        if (serviceMap[source.source_id]) {
+        // Only look for subscription sources (type: sub)
+        if (source.type === 'sub' && serviceMap[source.source_id]) {
           uniqueSources.add(serviceMap[source.source_id]);
         }
       });
@@ -503,7 +503,7 @@ function App() {
                           )}
                         </>
                       ) : (
-                        <span className="text-xs text-gray-500">Loading...</span>
+                        <span className="text-xs text-gray-500">Check availability</span>
                       )}
                     </div>
                   </div>
