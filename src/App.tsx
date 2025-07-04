@@ -10,18 +10,67 @@ interface Movie {
   rating: number;
   runtime: string;
   streamingSources: string[];
+  sourcesChecked?: boolean;
 }
 
-// Streaming service mapping
-const STREAMING_SERVICES: Record<string, { url: string; color: string; bgColor: string; watchmodeId?: number }> = {
-  'Netflix': { url: 'https://www.netflix.com/search?q=', color: '#FFFFFF', bgColor: '#E50914', watchmodeId: 203 },
-  'Prime Video': { url: 'https://www.amazon.com/s?k=', color: '#FFFFFF', bgColor: '#00A8E1', watchmodeId: 157 },
-  'Disney+': { url: 'https://www.disneyplus.com/search/', color: '#FFFFFF', bgColor: '#113CCF', watchmodeId: 372 },
-  'Max': { url: 'https://www.max.com/search?q=', color: '#FFFFFF', bgColor: '#002BE7', watchmodeId: 387 },
-  'Hulu': { url: 'https://www.hulu.com/search/', color: '#000000', bgColor: '#1CE783', watchmodeId: 26 },
-  'Apple TV+': { url: 'https://tv.apple.com/search?term=', color: '#FFFFFF', bgColor: '#000000', watchmodeId: 371 },
-  'Paramount+': { url: 'https://www.paramountplus.com/search/', color: '#FFFFFF', bgColor: '#0064FF', watchmodeId: 389 },
-  'Peacock': { url: 'https://www.peacocktv.com/search/', color: '#FFFFFF', bgColor: '#000000', watchmodeId: 386 }
+// Streaming service mapping with logos
+const STREAMING_SERVICES: Record<string, { url: string; color: string; bgColor: string; logo: string; watchmodeId?: number }> = {
+  'Netflix': { 
+    url: 'https://www.netflix.com/search?q=', 
+    color: '#FFFFFF', 
+    bgColor: '#E50914', 
+    logo: 'N',
+    watchmodeId: 203 
+  },
+  'Prime Video': { 
+    url: 'https://www.amazon.com/s?k=', 
+    color: '#FFFFFF', 
+    bgColor: '#00A8E1', 
+    logo: 'P',
+    watchmodeId: 157 
+  },
+  'Disney+': { 
+    url: 'https://www.disneyplus.com/search/', 
+    color: '#FFFFFF', 
+    bgColor: '#113CCF', 
+    logo: 'D+',
+    watchmodeId: 372 
+  },
+  'Max': { 
+    url: 'https://www.max.com/search?q=', 
+    color: '#FFFFFF', 
+    bgColor: '#002BE7', 
+    logo: 'M',
+    watchmodeId: 387 
+  },
+  'Hulu': { 
+    url: 'https://www.hulu.com/search/', 
+    color: '#000000', 
+    bgColor: '#1CE783', 
+    logo: 'H',
+    watchmodeId: 26 
+  },
+  'Apple TV+': { 
+    url: 'https://tv.apple.com/search?term=', 
+    color: '#FFFFFF', 
+    bgColor: '#000000', 
+    logo: 'A',
+    watchmodeId: 371 
+  },
+  'Paramount+': { 
+    url: 'https://www.paramountplus.com/search/', 
+    color: '#FFFFFF', 
+    bgColor: '#0064FF', 
+    logo: 'P+',
+    watchmodeId: 389 
+  },
+  'Peacock': { 
+    url: 'https://www.peacocktv.com/search/', 
+    color: '#FFFFFF', 
+    bgColor: '#000000', 
+    logo: 'P',
+    watchmodeId: 386 
+  }
 };
 
 // API configuration
@@ -200,7 +249,8 @@ function App() {
       overview: tmdbData?.overview || watchmodeData.plot_overview || 'No description available.',
       rating: tmdbData?.vote_average || watchmodeData.user_rating || 0,
       runtime: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : 'N/A',
-      streamingSources: getStreamingSources(sources)
+      streamingSources: getStreamingSources(sources),
+      sourcesChecked: fetchSources
     };
   };
 
@@ -476,34 +526,45 @@ function App() {
                       )}
                     </div>
                     
-                    {/* Streaming Services - Compact with Colors */}
-                    <div className="flex flex-wrap gap-1">
-                      {movie.streamingSources.length > 0 ? (
+                    {/* Streaming Services - Simplified Logos */}
+                    <div className="flex items-center gap-1">
+                      {movie.sourcesChecked && movie.streamingSources.length === 0 ? (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                          </svg>
+                          <span className="text-xs">Not streaming</span>
+                        </div>
+                      ) : movie.streamingSources.length > 0 ? (
                         <>
-                          {movie.streamingSources.slice(0, 2).map((source) => {
-                            const service = STREAMING_SERVICES[source];
-                            return (
-                              <span
-                                key={source}
-                                className="px-2 py-0.5 text-xs rounded font-medium"
-                                style={{
-                                  backgroundColor: service?.bgColor || '#1f2937',
-                                  color: service?.color || '#ffffff'
-                                }}
-                              >
-                                {source.split(' ')[0]}
-                              </span>
-                            );
-                          })}
-                          {movie.streamingSources.length > 2 && (
-                            <span className="px-2 py-0.5 bg-gray-700 text-gray-300 
-                                           text-xs rounded font-medium">
-                              +{movie.streamingSources.length - 2}
+                          <div className="flex -space-x-1">
+                            {movie.streamingSources.slice(0, 3).map((source, index) => {
+                              const service = STREAMING_SERVICES[source];
+                              return (
+                                <div
+                                  key={source}
+                                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-gray-800"
+                                  style={{
+                                    backgroundColor: service?.bgColor || '#1f2937',
+                                    color: service?.color || '#ffffff',
+                                    zIndex: 3 - index
+                                  }}
+                                  title={source}
+                                >
+                                  {service?.logo || source[0]}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {movie.streamingSources.length > 3 && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              +{movie.streamingSources.length - 3}
                             </span>
                           )}
                         </>
                       ) : (
-                        <span className="text-xs text-gray-500">Check availability</span>
+                        <span className="text-xs text-gray-500">Checking...</span>
                       )}
                     </div>
                   </div>
@@ -588,25 +649,42 @@ function App() {
                   
                   <p className="text-gray-300 mb-6">{selectedMovie.overview}</p>
                   
-                  {selectedMovie.streamingSources.length > 0 && (
+                  {selectedMovie.sourcesChecked && selectedMovie.streamingSources.length === 0 ? (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                      <span>Not available for streaming</span>
+                    </div>
+                  ) : selectedMovie.streamingSources.length > 0 ? (
                     <div>
-                      <h3 className="text-white font-semibold mb-3">Watch Now</h3>
+                      <h3 className="text-white font-semibold mb-3">Available on</h3>
                       <div className="flex flex-wrap gap-3">
-                        {selectedMovie.streamingSources.map((source) => (
-                          <a
-                            key={source}
-                            href={`${STREAMING_SERVICES[source]?.url || '#'}${encodeURIComponent(selectedMovie.title)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                                     transition-colors font-medium"
-                          >
-                            Watch on {source}
-                          </a>
-                        ))}
+                        {selectedMovie.streamingSources.map((source) => {
+                          const service = STREAMING_SERVICES[source];
+                          return (
+                            <a
+                              key={source}
+                              href={`${service?.url || '#'}${encodeURIComponent(selectedMovie.title)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all hover:scale-105"
+                              style={{
+                                backgroundColor: service?.bgColor || '#1f2937',
+                                color: service?.color || '#ffffff'
+                              }}
+                            >
+                              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+                                {service?.logo || source[0]}
+                              </div>
+                              <span className="font-medium">{source}</span>
+                            </a>
+                          );
+                        })}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
