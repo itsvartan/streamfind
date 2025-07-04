@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { StreamingSource } from '@types/movie';
+import type { StreamingSource } from '@/types/movie';
 
 interface StreamingBadgeProps {
   source: StreamingSource;

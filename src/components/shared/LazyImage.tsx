@@ -20,7 +20,6 @@ export default function LazyImage({
   onError,
 }: LazyImageProps) {
   const [imageSrc, setImageSrc] = useState(placeholderSrc);
-  const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   
@@ -50,7 +49,6 @@ export default function LazyImage({
   }, [inView, src, loaded, onLoad, onError]);
 
   const handleImageRef = (node: HTMLImageElement | null) => {
-    setImageRef(node);
     ref(node);
   };
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
-import type { Movie } from '@types/movie';
+import type { Movie } from '@/types/movie';
 import LazyImage from '@components/shared/LazyImage';
 import StreamingBadge from '@components/ResultsGrid/StreamingBadge';
 

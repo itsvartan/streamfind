@@ -4,7 +4,7 @@ import { useSearchStore } from '@stores/searchStore';
 import MovieCard from './MovieCard';
 import SkeletonCard from './SkeletonCard';
 import MovieDetail from '@components/MovieDetail/DetailModal';
-import type { Movie } from '@types/movie';
+import type { Movie } from '@/types/movie';
 
 export default function ResultsGrid() {
   const { results, isLoading, error } = useSearchStore();
