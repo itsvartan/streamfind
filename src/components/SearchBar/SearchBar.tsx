@@ -21,21 +21,22 @@ export default function SearchBar() {
     queryKey: ['search', debouncedQuery],
     queryFn: () => moviesAPI.searchMovies(debouncedQuery),
     enabled: debouncedQuery.length > 2,
-    onSuccess: (data) => {
-      setResults(data.movies);
-      setError(null);
-    },
-    onError: (error) => {
-      setError(error instanceof Error ? error.message : 'Search failed');
-    },
   });
 
   useEffect(() => {
     if (debouncedQuery.length > 2) {
       setLoading(true);
-      refetch().finally(() => setLoading(false));
+      refetch().then((result) => {
+        if (result.data) {
+          setResults(result.data.movies);
+          setError(null);
+        }
+        if (result.error) {
+          setError(result.error instanceof Error ? result.error.message : 'Search failed');
+        }
+      }).finally(() => setLoading(false));
     }
-  }, [debouncedQuery, refetch, setLoading]);
+  }, [debouncedQuery, refetch, setLoading, setResults, setError]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

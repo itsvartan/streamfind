@@ -82,7 +82,7 @@ export class MoviesAPI {
         type: source.type === 'sub' ? 'subscription' : 'free' as const,
         quality: 'HD' as const,
         link: source.web_url,
-        logo: STREAMING_SERVICES[source.name.toLowerCase().replace(/\s+/g, '_')]?.logo,
+        logo: (STREAMING_SERVICES as any)[source.name.toLowerCase().replace(/\s+/g, '_')]?.logo,
       }));
 
     return {

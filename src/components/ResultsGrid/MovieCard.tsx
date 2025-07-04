@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import clsx from 'clsx';
 import type { Movie } from '@types/movie';
 import LazyImage from '@components/shared/LazyImage';
 import StreamingBadge from './StreamingBadge';
