@@ -49,13 +49,23 @@ function App() {
   const loadTrendingMovies = async () => {
     setLoading(true);
     try {
+      console.log('Loading trending movies...');
       const response = await fetch(
         `${WATCHMODE_BASE_URL}/list-titles/?apiKey=${WATCHMODE_API_KEY}&types=movie&sort_by=popularity_desc&limit=12`
       );
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('Trending movies response:', data);
+      
+      // Check if data has titles array or is the array itself
+      const movies = data.titles || data || [];
       
       const formattedMovies = await Promise.all(
-        data.map(async (movie: any) => {
+        movies.map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
           return formatMovie(movie, tmdbData);
         })
@@ -64,6 +74,7 @@ function App() {
       setMovies(formattedMovies);
     } catch (error) {
       console.error('Error loading movies:', error);
+      setMovies([]);
     }
     setLoading(false);
   };
@@ -126,10 +137,17 @@ function App() {
     
     setLoading(true);
     try {
+      console.log(`Searching for: ${searchQuery}`);
       const response = await fetch(
         `${WATCHMODE_BASE_URL}/search/?apiKey=${WATCHMODE_API_KEY}&search_field=name&search_value=${encodeURIComponent(searchQuery)}&types=movie&limit=20`
       );
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('Search response:', data);
       
       const formattedMovies = await Promise.all(
         (data.title_results || []).map(async (movie: any) => {
@@ -141,6 +159,7 @@ function App() {
       setMovies(formattedMovies);
     } catch (error) {
       console.error('Error searching movies:', error);
+      setMovies([]);
     }
     setLoading(false);
   };
@@ -159,17 +178,28 @@ function App() {
     try {
       const serviceId = STREAMING_SERVICES[service]?.watchmodeId;
       if (!serviceId) {
+        console.error(`No watchmode ID found for service: ${service}`);
         setLoading(false);
         return;
       }
 
+      console.log(`Fetching movies for ${service} (ID: ${serviceId})`);
       const response = await fetch(
         `${WATCHMODE_BASE_URL}/list-titles/?apiKey=${WATCHMODE_API_KEY}&types=movie&source_ids=${serviceId}&sort_by=popularity_desc&limit=20`
       );
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log(`API returned ${data.titles?.length || 0} movies for ${service}`, data);
+      
+      // Check if data has titles array or is the array itself
+      const movies = data.titles || data || [];
       
       const formattedMovies = await Promise.all(
-        data.map(async (movie: any) => {
+        movies.map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
           return formatMovie(movie, tmdbData);
         })
@@ -178,6 +208,7 @@ function App() {
       setMovies(formattedMovies);
     } catch (error) {
       console.error('Error filtering by service:', error);
+      setMovies([]);
     }
     setLoading(false);
   };
