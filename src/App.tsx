@@ -133,10 +133,11 @@ function App() {
   const [movies, setMovies] = useState<Movie[]>(MOCK_MOVIES.slice(0, 6));
   const [loading, setLoading] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   // Simple search function
   const searchMovies = async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && !selectedService) {
       setMovies(MOCK_MOVIES.slice(0, 6));
       return;
     }
@@ -146,14 +147,45 @@ function App() {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Filter mock data based on query
-    const results = MOCK_MOVIES.filter(movie => 
-      movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter mock data based on query and/or service
+    let results = MOCK_MOVIES;
+    
+    if (searchQuery.trim()) {
+      results = results.filter(movie => 
+        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (selectedService) {
+      results = results.filter(movie => 
+        movie.streamingSources.includes(selectedService)
+      );
+    }
     
     setMovies(results);
     setLoading(false);
   };
+
+  // Filter by streaming service
+  const filterByService = (service: string | null) => {
+    setSelectedService(service);
+    setQuery('');
+    
+    if (!service) {
+      setMovies(MOCK_MOVIES.slice(0, 6));
+      return;
+    }
+    
+    const filtered = MOCK_MOVIES.filter(movie => 
+      movie.streamingSources.includes(service)
+    );
+    setMovies(filtered);
+  };
+
+  // Get unique streaming services
+  const allServices = Array.from(new Set(
+    MOCK_MOVIES.flatMap(movie => movie.streamingSources)
+  )).sort();
 
   // Search on Enter key
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -175,7 +207,7 @@ function App() {
           </div>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-12">
+          <div className="max-w-2xl mx-auto mb-8">
             <div className="relative">
               <input
                 type="text"
@@ -200,6 +232,43 @@ function App() {
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
+          </div>
+
+          {/* Streaming Service Filters */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => filterByService(null)}
+                className={`px-4 py-2 rounded-full transition-all ${
+                  !selectedService 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60'
+                }`}
+              >
+                All Movies
+              </button>
+              {allServices.map((service) => {
+                const serviceInfo = STREAMING_SERVICES[service];
+                return (
+                  <button
+                    key={service}
+                    onClick={() => filterByService(service)}
+                    className={`px-4 py-2 rounded-full transition-all ${
+                      selectedService === service
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60'
+                    }`}
+                  >
+                    {service}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedService && (
+              <p className="text-center text-gray-400 mt-4">
+                Showing movies available on {selectedService}
+              </p>
+            )}
           </div>
 
           {/* Loading State */}
@@ -270,9 +339,14 @@ function App() {
           )}
 
           {/* No Results */}
-          {!loading && movies.length === 0 && query && (
+          {!loading && movies.length === 0 && (query || selectedService) && (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">No movies found for "{query}"</p>
+              <p className="text-gray-400 text-lg">
+                {query && `No movies found for "${query}"`}
+                {query && selectedService && ' on '}
+                {selectedService && !query && `No movies found on ${selectedService}`}
+                {selectedService && query && selectedService}
+              </p>
             </div>
           )}
 
