@@ -610,23 +610,24 @@ function App() {
           {/* Movie Detail Modal */}
           {selectedMovie && (
             <div 
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto"
               onClick={() => setSelectedMovie(null)}
             >
-              <div 
-                className="bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="relative">
+              <div className="min-h-screen px-4 py-8 flex items-center justify-center">
+                <div 
+                  className="bg-gray-900 rounded-2xl max-w-2xl w-full my-auto max-h-[90vh] overflow-hidden flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                <div className="relative flex-shrink-0">
                   <img
                     src={selectedMovie.poster}
                     alt={selectedMovie.title}
-                    className="w-full h-64 sm:h-96 object-cover rounded-t-2xl"
+                    className="w-full h-48 sm:h-64 object-cover rounded-t-2xl"
                   />
                   <button
                     onClick={() => setSelectedMovie(null)}
                     className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-full p-2 
-                             hover:bg-black/80 transition-colors"
+                             hover:bg-black/80 transition-colors z-10"
                   >
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -634,7 +635,7 @@ function App() {
                   </button>
                 </div>
                 
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto">
                   <h2 className="text-3xl font-bold text-white mb-2">{selectedMovie.title}</h2>
                   <div className="flex items-center gap-4 text-gray-400 mb-4">
                     <span>{selectedMovie.year}</span>
