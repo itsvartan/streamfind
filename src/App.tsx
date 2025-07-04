@@ -117,7 +117,7 @@ function App() {
       }
       
       // Process movies in batches to avoid rate limiting
-      const formattedMovies = [];
+      const formattedMovies: Movie[] = [];
       const batchSize = 5;
       
       for (let i = 0; i < newMovies.length; i += batchSize) {
