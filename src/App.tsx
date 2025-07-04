@@ -10,6 +10,18 @@ interface Movie {
   streamingSources: string[];
 }
 
+// Streaming service URLs
+const STREAMING_URLS: Record<string, string> = {
+  'Netflix': 'https://www.netflix.com/search?q=',
+  'Prime Video': 'https://www.amazon.com/s?k=',
+  'Disney+': 'https://www.disneyplus.com/search/',
+  'Max': 'https://www.max.com/search?q=',
+  'Hulu': 'https://www.hulu.com/search/',
+  'Apple TV+': 'https://tv.apple.com/search?term=',
+  'Paramount+': 'https://www.paramountplus.com/search/',
+  'Peacock': 'https://www.peacocktv.com/search/'
+};
+
 // Mock data for demonstration
 const MOCK_MOVIES: Movie[] = [
   {
@@ -43,6 +55,54 @@ const MOCK_MOVIES: Movie[] = [
     poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     overview: 'Batman faces the Joker in a battle for Gotham City.',
     streamingSources: ['Max', 'Prime Video']
+  },
+  {
+    id: '5',
+    title: 'Titanic',
+    year: 1997,
+    poster: 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg',
+    overview: 'A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.',
+    streamingSources: ['Paramount+', 'Prime Video']
+  },
+  {
+    id: '6',
+    title: 'Avatar',
+    year: 2009,
+    poster: 'https://image.tmdb.org/t/p/w500/6EiRUJpuoeQPghrs3YNktfnqOVh.jpg',
+    overview: 'A paraplegic Marine dispatched to the moon Pandora on a unique mission.',
+    streamingSources: ['Disney+', 'Max']
+  },
+  {
+    id: '7',
+    title: 'The Avengers',
+    year: 2012,
+    poster: 'https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg',
+    overview: "Earth's mightiest heroes must come together to stop Loki and his alien army.",
+    streamingSources: ['Disney+']
+  },
+  {
+    id: '8',
+    title: 'Pulp Fiction',
+    year: 1994,
+    poster: 'https://image.tmdb.org/t/p/w500/fIE3lAGcZDV1G6XM5KmuWnNsPp1.jpg',
+    overview: 'The lives of two mob hitmen, a boxer, and a pair of bandits intertwine.',
+    streamingSources: ['Netflix', 'Prime Video']
+  },
+  {
+    id: '9',
+    title: 'The Shawshank Redemption',
+    year: 1994,
+    poster: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg',
+    overview: 'Two imprisoned men bond over years, finding redemption through acts of common decency.',
+    streamingSources: ['Max', 'Apple TV+']
+  },
+  {
+    id: '10',
+    title: 'Forrest Gump',
+    year: 1994,
+    poster: 'https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg',
+    overview: 'The story of a man with low IQ who achieves great things in his life.',
+    streamingSources: ['Paramount+', 'Prime Video']
   }
 ];
 
@@ -135,12 +195,15 @@ function App() {
                     <p className="text-xs font-semibold text-gray-600">Available on:</p>
                     <div className="flex flex-wrap gap-1">
                       {movie.streamingSources.map((source) => (
-                        <span
+                        <a
                           key={source}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                          href={`${STREAMING_URLS[source] || '#'}${encodeURIComponent(movie.title)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded hover:bg-blue-200 transition-colors cursor-pointer"
                         >
                           {source}
-                        </span>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -153,7 +216,7 @@ function App() {
         {!hasSearched && (
           <div className="text-center py-12 text-gray-500">
             <p className="mb-4">Search for your favorite movies to see where they're streaming!</p>
-            <p className="text-sm">Try searching for: Matrix, Inception, Dark Knight, or Interstellar</p>
+            <p className="text-sm">Try searching for: Titanic, Avatar, Matrix, Inception, Avengers, or Forrest Gump</p>
           </div>
         )}
       </div>
