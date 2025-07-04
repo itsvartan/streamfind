@@ -85,6 +85,14 @@ const WATCHMODE_API_KEY = import.meta.env.VITE_WATCHMODE_API_KEY;
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const WATCHMODE_BASE_URL = 'https://api.watchmode.com/v1';
 
+// Manual overrides for movies with known streaming availability
+// Add movies here that Watchmode doesn't have accurate data for
+const STREAMING_OVERRIDES: Record<string, string[]> = {
+  "Monsieur Hulot's Holiday": ['Max'],
+  "Mr. Hulot's Holiday": ['Max'],
+  // Add more overrides as needed
+};
+
 function App() {
   const [query, setQuery] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -246,9 +254,20 @@ function App() {
       sources = await fetchMovieSources(watchmodeData.id);
     }
     
+    // Get streaming sources from API
+    let streamingSources = getStreamingSources(sources);
+    
+    // Check for manual overrides
+    const movieTitle = watchmodeData.title;
+    if (STREAMING_OVERRIDES[movieTitle]) {
+      // Merge API sources with manual overrides
+      const overrideSources = STREAMING_OVERRIDES[movieTitle];
+      streamingSources = [...new Set([...streamingSources, ...overrideSources])];
+    }
+    
     return {
       id: String(watchmodeData.id),
-      title: watchmodeData.title,
+      title: movieTitle,
       year: watchmodeData.year || new Date().getFullYear(),
       poster: tmdbData?.poster_path 
         ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`
@@ -256,7 +275,7 @@ function App() {
       overview: tmdbData?.overview || watchmodeData.plot_overview || 'No description available.',
       rating: tmdbData?.vote_average || watchmodeData.user_rating || 0,
       runtime: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : 'N/A',
-      streamingSources: getStreamingSources(sources),
+      streamingSources: streamingSources,
       sourcesChecked: fetchSources
     };
   };
