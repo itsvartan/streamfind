@@ -1,98 +1,42 @@
-import { useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useQuery } from '@tanstack/react-query';
-import SearchBar from './components/SearchBar/SearchBar';
-import ResultsGrid from './components/ResultsGrid/ResultsGrid';
-import { moviesAPI } from './api/movies';
-import { useSearchStore } from './stores/searchStore';
+import { useState } from 'react';
 
 function App() {
-  const { query, setResults, setLoading, setError } = useSearchStore();
-
-  const { data: trendingData } = useQuery({
-    queryKey: ['trending'],
-    queryFn: () => moviesAPI.getTrending(),
-    enabled: !query,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-  });
-
-  useEffect(() => {
-    if (!query && trendingData) {
-      setResults(trendingData.movies);
-      setLoading(false);
-      setError(null);
-    }
-  }, [query, trendingData, setResults, setLoading, setError]);
+  const [query, setQuery] = useState('');
 
   return (
-    <>
-      <Helmet>
-        <title>StreamFind - Find Movies Across All Streaming Services</title>
-        <meta
-          name="description"
-          content="Search for movies and shows across Netflix, Prime Video, Disney+, and more. Find out where to watch your favorite content instantly."
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://api.watchmode.com" />
-        <link rel="preconnect" href="https://image.tmdb.org" />
-      </Helmet>
-
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-muted">
-          <div className="container py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-foreground">
-                Stream<span className="text-accent">Find</span>
-              </h1>
-              <nav className="flex items-center gap-4">
-                <button className="btn-ghost btn-sm">
-                  Trending
-                </button>
-                <button className="btn-ghost btn-sm">
-                  Browse
-                </button>
-              </nav>
-            </div>
-            <SearchBar />
-          </div>
-        </header>
-
-        <main>
-          <div className="container py-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {query ? `Results for "${query}"` : 'Trending Now'}
-            </h2>
-          </div>
-          <ResultsGrid />
-        </main>
-
-        <footer className="mt-16 py-8 border-t border-muted">
-          <div className="container text-center text-sm text-muted-foreground">
-            <p>
-              © {new Date().getFullYear()} StreamFind. Movie data provided by{' '}
-              <a
-                href="https://www.watchmode.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent hover:underline"
-              >
-                Watchmode
-              </a>
-              {' and '}
-              <a
-                href="https://www.themoviedb.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent hover:underline"
-              >
-                TMDB
-              </a>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-center mb-8">
+          Stream<span className="text-blue-600">Find</span>
+        </h1>
+        
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search for movies..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+          {query && (
+            <p className="mt-4 text-gray-600">
+              Searching for: <strong>{query}</strong>
             </p>
-          </div>
-        </footer>
+          )}
+        </div>
+
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>StreamFind - Find where to watch your favorite movies</p>
+          <p className="mt-2">
+            Add your API keys in Vercel Environment Variables:
+            <br />
+            VITE_WATCHMODE_API_KEY and VITE_TMDB_API_KEY
+          </p>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
-export default App
+export default App;
