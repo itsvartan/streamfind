@@ -13,15 +13,15 @@ interface Movie {
 }
 
 // Streaming service mapping
-const STREAMING_SERVICES: Record<string, { url: string; color: string; watchmodeId?: number }> = {
-  'Netflix': { url: 'https://www.netflix.com/search?q=', color: '#E50914', watchmodeId: 203 },
-  'Prime Video': { url: 'https://www.amazon.com/s?k=', color: '#00A8E1', watchmodeId: 157 },
-  'Disney+': { url: 'https://www.disneyplus.com/search/', color: '#113CCF', watchmodeId: 372 },
-  'Max': { url: 'https://www.max.com/search?q=', color: '#002BE7', watchmodeId: 387 },
-  'Hulu': { url: 'https://www.hulu.com/search/', color: '#1CE783', watchmodeId: 157 },
-  'Apple TV+': { url: 'https://tv.apple.com/search?term=', color: '#000000', watchmodeId: 371 },
-  'Paramount+': { url: 'https://www.paramountplus.com/search/', color: '#0064FF', watchmodeId: 389 },
-  'Peacock': { url: 'https://www.peacocktv.com/search/', color: '#000000', watchmodeId: 386 }
+const STREAMING_SERVICES: Record<string, { url: string; color: string; bgColor: string; watchmodeId?: number }> = {
+  'Netflix': { url: 'https://www.netflix.com/search?q=', color: '#FFFFFF', bgColor: '#E50914', watchmodeId: 203 },
+  'Prime Video': { url: 'https://www.amazon.com/s?k=', color: '#FFFFFF', bgColor: '#00A8E1', watchmodeId: 157 },
+  'Disney+': { url: 'https://www.disneyplus.com/search/', color: '#FFFFFF', bgColor: '#113CCF', watchmodeId: 372 },
+  'Max': { url: 'https://www.max.com/search?q=', color: '#FFFFFF', bgColor: '#002BE7', watchmodeId: 387 },
+  'Hulu': { url: 'https://www.hulu.com/search/', color: '#000000', bgColor: '#1CE783', watchmodeId: 26 },
+  'Apple TV+': { url: 'https://tv.apple.com/search?term=', color: '#FFFFFF', bgColor: '#000000', watchmodeId: 371 },
+  'Paramount+': { url: 'https://www.paramountplus.com/search/', color: '#FFFFFF', bgColor: '#0064FF', watchmodeId: 389 },
+  'Peacock': { url: 'https://www.peacocktv.com/search/', color: '#FFFFFF', bgColor: '#000000', watchmodeId: 386 }
 };
 
 // API configuration
@@ -116,14 +116,21 @@ function App() {
         setHasMore(false);
       }
       
-      const formattedMovies = await Promise.all(
-        newMovies.map(async (movie: any) => {
-          const tmdbData = await fetchTMDBData(movie.tmdb_id);
-          // For trending movies, we need to fetch sources separately
-          // For now, we'll just format without sources
-          return formatMovie(movie, tmdbData);
-        })
-      );
+      // Process movies in batches to avoid rate limiting
+      const formattedMovies = [];
+      const batchSize = 5;
+      
+      for (let i = 0; i < newMovies.length; i += batchSize) {
+        const batch = newMovies.slice(i, i + batchSize);
+        const batchResults = await Promise.all(
+          batch.map(async (movie: any) => {
+            const tmdbData = await fetchTMDBData(movie.tmdb_id);
+            // Fetch sources for each movie
+            return await formatMovie(movie, tmdbData, true);
+          })
+        );
+        formattedMovies.push(...batchResults);
+      }
       
       if (loadMore) {
         setMovies(prev => [...prev, ...formattedMovies]);
@@ -157,11 +164,30 @@ function App() {
     }
   };
 
+  // Fetch sources for a single movie
+  const fetchMovieSources = async (titleId: string) => {
+    try {
+      const response = await fetch(
+        `${WATCHMODE_BASE_URL}/title/${titleId}/sources/?apiKey=${WATCHMODE_API_KEY}`
+      );
+      
+      if (!response.ok) return [];
+      
+      const data = await response.json();
+      return data || [];
+    } catch (error) {
+      console.error(`Error fetching sources for title ${titleId}:`, error);
+      return [];
+    }
+  };
+
   // Format movie data
-  const formatMovie = (watchmodeData: any, tmdbData: any): Movie => {
-    // Debug logging for first few movies
-    if (movies.length < 3) {
-      console.log('Watchmode data:', watchmodeData);
+  const formatMovie = async (watchmodeData: any, tmdbData: any, fetchSources = true): Promise<Movie> => {
+    // Fetch sources if not provided and fetchSources is true
+    let sources = watchmodeData.sources || [];
+    
+    if (fetchSources && (!sources || sources.length === 0) && watchmodeData.id) {
+      sources = await fetchMovieSources(watchmodeData.id);
     }
     
     return {
@@ -174,7 +200,7 @@ function App() {
       overview: tmdbData?.overview || watchmodeData.plot_overview || 'No description available.',
       rating: tmdbData?.vote_average || watchmodeData.user_rating || 0,
       runtime: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : 'N/A',
-      streamingSources: getStreamingSources(watchmodeData.sources || [])
+      streamingSources: getStreamingSources(sources)
     };
   };
 
@@ -232,7 +258,7 @@ function App() {
       const formattedMovies = await Promise.all(
         (data.title_results || []).map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
-          return formatMovie(movie, tmdbData);
+          return await formatMovie(movie, tmdbData, true);
         })
       );
       
@@ -283,12 +309,8 @@ function App() {
       const formattedMovies = await Promise.all(
         movies.map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
-          // When filtering by service, we know these movies are on that service
-          const movieData = formatMovie(movie, tmdbData);
-          if (selectedService) {
-            // Add the selected service to sources since we filtered by it
-            movieData.streamingSources = [selectedService];
-          }
+          // Fetch sources even when filtering to get all available services
+          const movieData = await formatMovie(movie, tmdbData, true);
           return movieData;
         })
       );
@@ -454,26 +476,34 @@ function App() {
                       )}
                     </div>
                     
-                    {/* Streaming Services - Compact */}
+                    {/* Streaming Services - Compact with Colors */}
                     <div className="flex flex-wrap gap-1">
                       {movie.streamingSources.length > 0 ? (
-                        movie.streamingSources.slice(0, 3).map((source) => (
-                          <span
-                            key={source}
-                            className="px-2 py-0.5 bg-blue-600/20 text-blue-400 
-                                     text-xs rounded-full"
-                          >
-                            {source.split(' ')[0]}
-                          </span>
-                        ))
+                        <>
+                          {movie.streamingSources.slice(0, 2).map((source) => {
+                            const service = STREAMING_SERVICES[source];
+                            return (
+                              <span
+                                key={source}
+                                className="px-2 py-0.5 text-xs rounded font-medium"
+                                style={{
+                                  backgroundColor: service?.bgColor || '#1f2937',
+                                  color: service?.color || '#ffffff'
+                                }}
+                              >
+                                {source.split(' ')[0]}
+                              </span>
+                            );
+                          })}
+                          {movie.streamingSources.length > 2 && (
+                            <span className="px-2 py-0.5 bg-gray-700 text-gray-300 
+                                           text-xs rounded font-medium">
+                              +{movie.streamingSources.length - 2}
+                            </span>
+                          )}
+                        </>
                       ) : (
-                        <span className="text-xs text-gray-500">Check details</span>
-                      )}
-                      {movie.streamingSources.length > 3 && (
-                        <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 
-                                       text-xs rounded-full">
-                          +{movie.streamingSources.length - 3}
-                        </span>
+                        <span className="text-xs text-gray-500">Loading...</span>
                       )}
                     </div>
                   </div>
