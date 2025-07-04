@@ -13,62 +13,69 @@ interface Movie {
   sourcesChecked?: boolean;
 }
 
-// Streaming service mapping with logos
-const STREAMING_SERVICES: Record<string, { url: string; color: string; bgColor: string; logo: string; watchmodeId?: number }> = {
+// Use CDN logos for actual streaming service logos
+const getServiceLogo = (service: string): string => {
+  const logos: Record<string, string> = {
+    'Netflix': 'https://images.justwatch.com/icon/207360008/s100/netflix.webp',
+    'Prime Video': 'https://images.justwatch.com/icon/52449539/s100/amazon-prime-video.webp',
+    'Disney+': 'https://images.justwatch.com/icon/147638351/s100/disney-plus.webp',
+    'Max': 'https://images.justwatch.com/icon/305458112/s100/max.webp',
+    'Hulu': 'https://images.justwatch.com/icon/116305230/s100/hulu.webp',
+    'Apple TV+': 'https://images.justwatch.com/icon/152862153/s100/apple-tv-plus.webp',
+    'Paramount+': 'https://images.justwatch.com/icon/242706661/s100/paramount-plus.webp',
+    'Peacock': 'https://images.justwatch.com/icon/194173871/s100/peacock.webp'
+  };
+  return logos[service] || '';
+};
+
+// Streaming service mapping
+const STREAMING_SERVICES: Record<string, { url: string; color: string; bgColor: string; watchmodeId?: number }> = {
   'Netflix': { 
     url: 'https://www.netflix.com/search?q=', 
     color: '#FFFFFF', 
     bgColor: '#E50914', 
-    logo: 'N',
     watchmodeId: 203 
   },
   'Prime Video': { 
     url: 'https://www.amazon.com/s?k=', 
     color: '#FFFFFF', 
     bgColor: '#00A8E1', 
-    logo: 'P',
     watchmodeId: 157 
   },
   'Disney+': { 
     url: 'https://www.disneyplus.com/search/', 
     color: '#FFFFFF', 
     bgColor: '#113CCF', 
-    logo: 'D+',
     watchmodeId: 372 
   },
   'Max': { 
     url: 'https://www.max.com/search?q=', 
     color: '#FFFFFF', 
     bgColor: '#002BE7', 
-    logo: 'M',
     watchmodeId: 387 
   },
   'Hulu': { 
     url: 'https://www.hulu.com/search/', 
     color: '#000000', 
     bgColor: '#1CE783', 
-    logo: 'H',
     watchmodeId: 26 
   },
   'Apple TV+': { 
     url: 'https://tv.apple.com/search?term=', 
     color: '#FFFFFF', 
     bgColor: '#000000', 
-    logo: 'A',
     watchmodeId: 371 
   },
   'Paramount+': { 
     url: 'https://www.paramountplus.com/search/', 
     color: '#FFFFFF', 
     bgColor: '#0064FF', 
-    logo: 'P+',
     watchmodeId: 389 
   },
   'Peacock': { 
     url: 'https://www.peacocktv.com/search/', 
     color: '#FFFFFF', 
     bgColor: '#000000', 
-    logo: 'P',
     watchmodeId: 386 
   }
 };
@@ -538,28 +545,31 @@ function App() {
                         </div>
                       ) : movie.streamingSources.length > 0 ? (
                         <>
-                          <div className="flex -space-x-1">
-                            {movie.streamingSources.slice(0, 3).map((source, index) => {
-                              const service = STREAMING_SERVICES[source];
-                              return (
+                          <div className="flex gap-1">
+                            {movie.streamingSources.slice(0, 4).map((source) => {
+                              const logoUrl = getServiceLogo(source);
+                              return logoUrl ? (
+                                <img
+                                  key={source}
+                                  src={logoUrl}
+                                  alt={source}
+                                  className="w-6 h-6 rounded object-cover"
+                                  title={source}
+                                />
+                              ) : (
                                 <div
                                   key={source}
-                                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-gray-800"
-                                  style={{
-                                    backgroundColor: service?.bgColor || '#1f2937',
-                                    color: service?.color || '#ffffff',
-                                    zIndex: 3 - index
-                                  }}
+                                  className="w-6 h-6 rounded bg-gray-700 flex items-center justify-center text-xs font-bold"
                                   title={source}
                                 >
-                                  {service?.logo || source[0]}
+                                  {source[0]}
                                 </div>
                               );
                             })}
                           </div>
-                          {movie.streamingSources.length > 3 && (
+                          {movie.streamingSources.length > 4 && (
                             <span className="text-xs text-gray-400 ml-1">
-                              +{movie.streamingSources.length - 3}
+                              +{movie.streamingSources.length - 4}
                             </span>
                           )}
                         </>
@@ -663,22 +673,36 @@ function App() {
                       <div className="flex flex-wrap gap-3">
                         {selectedMovie.streamingSources.map((source) => {
                           const service = STREAMING_SERVICES[source];
+                          const logoUrl = getServiceLogo(source);
                           return (
                             <a
                               key={source}
                               href={`${service?.url || '#'}${encodeURIComponent(selectedMovie.title)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all hover:scale-105"
-                              style={{
-                                backgroundColor: service?.bgColor || '#1f2937',
-                                color: service?.color || '#ffffff'
-                              }}
+                              className="flex items-center gap-3 px-4 py-3 bg-gray-800 rounded-lg transition-all hover:bg-gray-700 hover:scale-105"
                             >
-                              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
-                                {service?.logo || source[0]}
+                              {logoUrl ? (
+                                <img
+                                  src={logoUrl}
+                                  alt={source}
+                                  className="w-10 h-10 rounded object-cover"
+                                />
+                              ) : (
+                                <div
+                                  className="w-10 h-10 rounded flex items-center justify-center font-bold"
+                                  style={{
+                                    backgroundColor: service?.bgColor || '#1f2937',
+                                    color: service?.color || '#ffffff'
+                                  }}
+                                >
+                                  {source[0]}
+                                </div>
+                              )}
+                              <div>
+                                <div className="text-white font-medium">{source}</div>
+                                <div className="text-gray-400 text-sm">Watch now</div>
                               </div>
-                              <span className="font-medium">{source}</span>
                             </a>
                           );
                         })}
