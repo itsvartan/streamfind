@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { useSearchStore } from '@stores/searchStore';
-import { useDebounce } from '@hooks/useDebounce';
-import { moviesAPI } from '@api/movies';
+import { useSearchStore } from '../../stores/searchStore';
+import { useDebounce } from '../../hooks/useDebounce';
+import { moviesAPI } from '../../api/movies';
 import SearchSuggestions from './SearchSuggestions';
 import RecentSearches from './RecentSearches';
 

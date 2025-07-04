@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { useSearchStore } from '@stores/searchStore';
+import { useSearchStore } from '../../stores/searchStore';
 
 interface RecentSearchesProps {
   onSelect: (query: string) => void;

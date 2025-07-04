@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Movie, SearchFilters } from '@/types/movie';
+import type { Movie, SearchFilters } from '../types/movie';
 
 interface SearchHistory {
   query: string;

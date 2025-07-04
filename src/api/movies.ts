@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { API_CONFIG, STREAMING_SERVICES } from './config';
-import type { Movie, SearchResult, SearchFilters, StreamingSource } from '@/types/movie';
+import type { Movie, SearchResult, SearchFilters, StreamingSource } from '../types/movie';
 
 interface WatchmodeTitle {
   id: number;

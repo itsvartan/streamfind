@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
-import SearchBar from '@components/SearchBar/SearchBar';
-import ResultsGrid from '@components/ResultsGrid/ResultsGrid';
-import { moviesAPI } from '@api/movies';
-import { useSearchStore } from '@stores/searchStore';
+import SearchBar from './components/SearchBar/SearchBar';
+import ResultsGrid from './components/ResultsGrid/ResultsGrid';
+import { moviesAPI } from './api/movies';
+import { useSearchStore } from './stores/searchStore';
 
 function App() {
   const { query, setResults, setLoading, setError } = useSearchStore();
