@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// Simple movie type
+// Movie type
 interface Movie {
   id: string;
   title: string;
@@ -12,187 +12,211 @@ interface Movie {
   streamingSources: string[];
 }
 
-// Streaming service URLs and colors
-const STREAMING_SERVICES: Record<string, { url: string; color: string }> = {
-  'Netflix': { url: 'https://www.netflix.com/search?q=', color: '#E50914' },
-  'Prime Video': { url: 'https://www.amazon.com/s?k=', color: '#00A8E1' },
-  'Disney+': { url: 'https://www.disneyplus.com/search/', color: '#113CCF' },
-  'Max': { url: 'https://www.max.com/search?q=', color: '#002BE7' },
-  'Hulu': { url: 'https://www.hulu.com/search/', color: '#1CE783' },
-  'Apple TV+': { url: 'https://tv.apple.com/search?term=', color: '#000000' },
-  'Paramount+': { url: 'https://www.paramountplus.com/search/', color: '#0064FF' },
-  'Peacock': { url: 'https://www.peacocktv.com/search/', color: '#000000' }
+// Streaming service mapping
+const STREAMING_SERVICES: Record<string, { url: string; color: string; watchmodeId?: number }> = {
+  'Netflix': { url: 'https://www.netflix.com/search?q=', color: '#E50914', watchmodeId: 203 },
+  'Prime Video': { url: 'https://www.amazon.com/s?k=', color: '#00A8E1', watchmodeId: 157 },
+  'Disney+': { url: 'https://www.disneyplus.com/search/', color: '#113CCF', watchmodeId: 372 },
+  'Max': { url: 'https://www.max.com/search?q=', color: '#002BE7', watchmodeId: 387 },
+  'Hulu': { url: 'https://www.hulu.com/search/', color: '#1CE783', watchmodeId: 157 },
+  'Apple TV+': { url: 'https://tv.apple.com/search?term=', color: '#000000', watchmodeId: 371 },
+  'Paramount+': { url: 'https://www.paramountplus.com/search/', color: '#0064FF', watchmodeId: 389 },
+  'Peacock': { url: 'https://www.peacocktv.com/search/', color: '#000000', watchmodeId: 386 }
 };
 
-// Enhanced mock data
-const MOCK_MOVIES: Movie[] = [
-  {
-    id: '1',
-    title: 'Oppenheimer',
-    year: 2023,
-    poster: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-    overview: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
-    rating: 8.5,
-    runtime: '3h',
-    streamingSources: ['Prime Video', 'Apple TV+']
-  },
-  {
-    id: '2',
-    title: 'Barbie',
-    year: 2023,
-    poster: 'https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg',
-    overview: 'Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.',
-    rating: 7.2,
-    runtime: '1h 54m',
-    streamingSources: ['Max', 'Prime Video']
-  },
-  {
-    id: '3',
-    title: 'The Batman',
-    year: 2022,
-    poster: 'https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg',
-    overview: 'Batman ventures into Gotham City\'s underworld when a sadistic killer leaves behind cryptic clues.',
-    rating: 7.9,
-    runtime: '2h 56m',
-    streamingSources: ['Max', 'Netflix']
-  },
-  {
-    id: '4',
-    title: 'Dune',
-    year: 2021,
-    poster: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg',
-    overview: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
-    rating: 8.0,
-    runtime: '2h 35m',
-    streamingSources: ['Max', 'Prime Video']
-  },
-  {
-    id: '5',
-    title: 'Spider-Man: Across the Spider-Verse',
-    year: 2023,
-    poster: 'https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg',
-    overview: 'Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People.',
-    rating: 8.7,
-    runtime: '2h 20m',
-    streamingSources: ['Netflix', 'Prime Video']
-  },
-  {
-    id: '6',
-    title: 'The Matrix',
-    year: 1999,
-    poster: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
-    overview: 'A computer hacker learns about the true nature of reality and his role in the war against its controllers.',
-    rating: 8.7,
-    runtime: '2h 16m',
-    streamingSources: ['Netflix', 'Max', 'Prime Video']
-  },
-  {
-    id: '7',
-    title: 'Inception',
-    year: 2010,
-    poster: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-    overview: 'A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.',
-    rating: 8.8,
-    runtime: '2h 28m',
-    streamingSources: ['Netflix', 'Apple TV+']
-  },
-  {
-    id: '8',
-    title: 'Interstellar',
-    year: 2014,
-    poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-    overview: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
-    rating: 8.6,
-    runtime: '2h 49m',
-    streamingSources: ['Paramount+', 'Prime Video']
-  },
-  {
-    id: '9',
-    title: 'Titanic',
-    year: 1997,
-    poster: 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg',
-    overview: 'A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.',
-    rating: 7.9,
-    runtime: '3h 14m',
-    streamingSources: ['Paramount+', 'Prime Video']
-  },
-  {
-    id: '10',
-    title: 'Avatar: The Way of Water',
-    year: 2022,
-    poster: 'https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg',
-    overview: 'Jake Sully lives with his newfound family formed on the extrasolar moon Pandora.',
-    rating: 7.6,
-    runtime: '3h 12m',
-    streamingSources: ['Disney+', 'Max']
-  }
-];
+// API configuration
+const WATCHMODE_API_KEY = import.meta.env.VITE_WATCHMODE_API_KEY;
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const WATCHMODE_BASE_URL = 'https://api.watchmode.com/v1';
 
 function App() {
   const [query, setQuery] = useState('');
-  const [movies, setMovies] = useState<Movie[]>(MOCK_MOVIES.slice(0, 6));
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(false);
 
-  // Simple search function
-  const searchMovies = async (searchQuery: string) => {
-    if (!searchQuery.trim() && !selectedService) {
-      setMovies(MOCK_MOVIES.slice(0, 6));
-      return;
+  // Check if API key exists
+  useEffect(() => {
+    setHasApiKey(!!WATCHMODE_API_KEY);
+    if (WATCHMODE_API_KEY) {
+      loadTrendingMovies();
     }
+  }, []);
+
+  // Load trending movies on start
+  const loadTrendingMovies = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${WATCHMODE_BASE_URL}/list-titles/?apiKey=${WATCHMODE_API_KEY}&types=movie&sort_by=popularity_desc&limit=12`
+      );
+      const data = await response.json();
+      
+      const formattedMovies = await Promise.all(
+        data.map(async (movie: any) => {
+          const tmdbData = await fetchTMDBData(movie.tmdb_id);
+          return formatMovie(movie, tmdbData);
+        })
+      );
+      
+      setMovies(formattedMovies);
+    } catch (error) {
+      console.error('Error loading movies:', error);
+    }
+    setLoading(false);
+  };
+
+  // Fetch additional data from TMDB
+  const fetchTMDBData = async (tmdbId: number) => {
+    if (!TMDB_API_KEY || !tmdbId) return null;
+    
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_API_KEY}`
+      );
+      return await response.json();
+    } catch {
+      return null;
+    }
+  };
+
+  // Format movie data
+  const formatMovie = (watchmodeData: any, tmdbData: any): Movie => {
+    return {
+      id: String(watchmodeData.id),
+      title: watchmodeData.title,
+      year: watchmodeData.year || new Date().getFullYear(),
+      poster: tmdbData?.poster_path 
+        ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`
+        : 'https://via.placeholder.com/500x750?text=No+Poster',
+      overview: tmdbData?.overview || watchmodeData.plot_overview || 'No description available.',
+      rating: tmdbData?.vote_average || watchmodeData.user_rating || 0,
+      runtime: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : 'N/A',
+      streamingSources: getStreamingSources(watchmodeData.sources || [])
+    };
+  };
+
+  // Extract streaming sources
+  const getStreamingSources = (sources: any[]): string[] => {
+    const serviceMap: Record<number, string> = {
+      203: 'Netflix',
+      157: 'Prime Video',
+      372: 'Disney+',
+      387: 'Max',
+      371: 'Apple TV+',
+      389: 'Paramount+',
+      386: 'Peacock'
+    };
+
+    const uniqueSources = new Set<string>();
+    sources.forEach(source => {
+      if (serviceMap[source.source_id]) {
+        uniqueSources.add(serviceMap[source.source_id]);
+      }
+    });
+
+    return Array.from(uniqueSources);
+  };
+
+  // Search movies
+  const searchMovies = async (searchQuery: string) => {
+    if (!WATCHMODE_API_KEY) return;
     
     setLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Filter mock data based on query and/or service
-    let results = MOCK_MOVIES;
-    
-    if (searchQuery.trim()) {
-      results = results.filter(movie => 
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+    try {
+      const response = await fetch(
+        `${WATCHMODE_BASE_URL}/search/?apiKey=${WATCHMODE_API_KEY}&search_field=name&search_value=${encodeURIComponent(searchQuery)}&types=movie&limit=20`
       );
-    }
-    
-    if (selectedService) {
-      results = results.filter(movie => 
-        movie.streamingSources.includes(selectedService)
+      const data = await response.json();
+      
+      const formattedMovies = await Promise.all(
+        (data.title_results || []).map(async (movie: any) => {
+          const tmdbData = await fetchTMDBData(movie.tmdb_id);
+          return formatMovie(movie, tmdbData);
+        })
       );
+      
+      setMovies(formattedMovies);
+    } catch (error) {
+      console.error('Error searching movies:', error);
     }
-    
-    setMovies(results);
     setLoading(false);
   };
 
   // Filter by streaming service
-  const filterByService = (service: string | null) => {
+  const filterByService = async (service: string | null) => {
     setSelectedService(service);
     setQuery('');
     
-    if (!service) {
-      setMovies(MOCK_MOVIES.slice(0, 6));
+    if (!service || !WATCHMODE_API_KEY) {
+      loadTrendingMovies();
       return;
     }
     
-    const filtered = MOCK_MOVIES.filter(movie => 
-      movie.streamingSources.includes(service)
-    );
-    setMovies(filtered);
+    setLoading(true);
+    try {
+      const serviceId = STREAMING_SERVICES[service]?.watchmodeId;
+      if (!serviceId) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${WATCHMODE_BASE_URL}/list-titles/?apiKey=${WATCHMODE_API_KEY}&types=movie&source_ids=${serviceId}&sort_by=popularity_desc&limit=20`
+      );
+      const data = await response.json();
+      
+      const formattedMovies = await Promise.all(
+        data.map(async (movie: any) => {
+          const tmdbData = await fetchTMDBData(movie.tmdb_id);
+          return formatMovie(movie, tmdbData);
+        })
+      );
+      
+      setMovies(formattedMovies);
+    } catch (error) {
+      console.error('Error filtering by service:', error);
+    }
+    setLoading(false);
   };
 
   // Get unique streaming services
-  const allServices = Array.from(new Set(
-    MOCK_MOVIES.flatMap(movie => movie.streamingSources)
-  )).sort();
+  const allServices = Object.keys(STREAMING_SERVICES);
 
   // Search on Enter key
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && query.trim()) {
       searchMovies(query);
     }
   };
+
+  // No API key message
+  if (!hasApiKey) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900">
+        <div className="min-h-screen bg-black/50 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center p-8 bg-gray-900/80 rounded-2xl max-w-md">
+            <h1 className="text-3xl font-bold text-white mb-4">API Key Required</h1>
+            <p className="text-gray-300 mb-4">
+              To see real movie data from all streaming services, please add your API keys in Vercel:
+            </p>
+            <div className="text-left bg-black/50 p-4 rounded-lg text-sm text-gray-400">
+              <p>VITE_WATCHMODE_API_KEY=your_key</p>
+              <p>VITE_TMDB_API_KEY=your_key (optional)</p>
+            </div>
+            <p className="text-gray-400 mt-4 text-sm">
+              Get your free API key at{' '}
+              <a href="https://api.watchmode.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                api.watchmode.com
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900">
@@ -203,7 +227,7 @@ function App() {
             <h1 className="text-5xl font-bold text-white mb-2">
               Stream<span className="text-blue-400">Find</span>
             </h1>
-            <p className="text-gray-300">Find where to watch your favorite movies</p>
+            <p className="text-gray-300">Real-time streaming availability from all platforms</p>
           </div>
           
           {/* Search Bar */}
@@ -212,25 +236,19 @@ function App() {
               <input
                 type="text"
                 value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  searchMovies(e.target.value);
-                }}
+                onChange={(e) => setQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Search movies..."
+                placeholder="Search from thousands of movies..."
                 className="w-full px-6 py-4 bg-gray-900/80 backdrop-blur text-white rounded-full 
                          border border-gray-700 focus:border-blue-500 focus:outline-none 
                          placeholder-gray-400 text-lg"
               />
-              <svg 
-                className="absolute right-6 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+              <button
+                onClick={() => query.trim() && searchMovies(query)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+                Search
+              </button>
             </div>
           </div>
 
@@ -272,12 +290,13 @@ function App() {
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+              <p className="mt-4 text-gray-300">Loading real movie data...</p>
             </div>
           )}
 
           {/* Movie Grid */}
           {!loading && movies.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {movies.map((movie) => (
                 <div 
                   key={movie.id} 
@@ -291,43 +310,56 @@ function App() {
                       src={movie.poster}
                       alt={movie.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/500x750?text=No+Poster';
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                     
                     {/* Rating Badge */}
-                    <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1 
-                                  flex items-center gap-1">
-                      <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-white font-semibold">{movie.rating}</span>
-                    </div>
+                    {movie.rating > 0 && (
+                      <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1 
+                                    flex items-center gap-1">
+                        <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span className="text-white font-semibold">{movie.rating.toFixed(1)}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Movie Info */}
                   <div className="p-5">
-                    <h3 className="text-xl font-bold text-white mb-1">{movie.title}</h3>
+                    <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{movie.title}</h3>
                     <div className="flex items-center gap-3 text-gray-400 text-sm mb-3">
                       <span>{movie.year}</span>
-                      <span>•</span>
-                      <span>{movie.runtime}</span>
+                      {movie.runtime !== 'N/A' && (
+                        <>
+                          <span>•</span>
+                          <span>{movie.runtime}</span>
+                        </>
+                      )}
                     </div>
                     
                     {/* Streaming Services */}
                     <div className="flex flex-wrap gap-2">
-                      {movie.streamingSources.map((source) => (
-                        <a
-                          key={source}
-                          href={`${STREAMING_SERVICES[source]?.url || '#'}${encodeURIComponent(movie.title)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-400 
-                                   text-xs rounded-full hover:bg-blue-600/30 transition-colors"
-                        >
-                          {source}
-                        </a>
-                      ))}
+                      {movie.streamingSources.length > 0 ? (
+                        movie.streamingSources.map((source) => (
+                          <a
+                            key={source}
+                            href={`${STREAMING_SERVICES[source]?.url || '#'}${encodeURIComponent(movie.title)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-400 
+                                     text-xs rounded-full hover:bg-blue-600/30 transition-colors"
+                          >
+                            {source}
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500">No streaming info</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -378,36 +410,46 @@ function App() {
                   <h2 className="text-3xl font-bold text-white mb-2">{selectedMovie.title}</h2>
                   <div className="flex items-center gap-4 text-gray-400 mb-4">
                     <span>{selectedMovie.year}</span>
-                    <span>•</span>
-                    <span>{selectedMovie.runtime}</span>
-                    <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-white font-semibold">{selectedMovie.rating}</span>
-                    </div>
+                    {selectedMovie.runtime !== 'N/A' && (
+                      <>
+                        <span>•</span>
+                        <span>{selectedMovie.runtime}</span>
+                      </>
+                    )}
+                    {selectedMovie.rating > 0 && (
+                      <>
+                        <span>•</span>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-white font-semibold">{selectedMovie.rating.toFixed(1)}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   <p className="text-gray-300 mb-6">{selectedMovie.overview}</p>
                   
-                  <div>
-                    <h3 className="text-white font-semibold mb-3">Watch Now</h3>
-                    <div className="flex flex-wrap gap-3">
-                      {selectedMovie.streamingSources.map((source) => (
-                        <a
-                          key={source}
-                          href={`${STREAMING_SERVICES[source]?.url || '#'}${encodeURIComponent(selectedMovie.title)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                                   transition-colors font-medium"
-                        >
-                          Watch on {source}
-                        </a>
-                      ))}
+                  {selectedMovie.streamingSources.length > 0 && (
+                    <div>
+                      <h3 className="text-white font-semibold mb-3">Watch Now</h3>
+                      <div className="flex flex-wrap gap-3">
+                        {selectedMovie.streamingSources.map((source) => (
+                          <a
+                            key={source}
+                            href={`${STREAMING_SERVICES[source]?.url || '#'}${encodeURIComponent(selectedMovie.title)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                                     transition-colors font-medium"
+                          >
+                            Watch on {source}
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
