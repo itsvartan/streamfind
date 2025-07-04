@@ -247,22 +247,19 @@ function App() {
               >
                 All Movies
               </button>
-              {allServices.map((service) => {
-                const serviceInfo = STREAMING_SERVICES[service];
-                return (
-                  <button
-                    key={service}
-                    onClick={() => filterByService(service)}
-                    className={`px-4 py-2 rounded-full transition-all ${
-                      selectedService === service
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60'
-                    }`}
-                  >
-                    {service}
-                  </button>
-                );
-              })}
+              {allServices.map((service) => (
+                <button
+                  key={service}
+                  onClick={() => filterByService(service)}
+                  className={`px-4 py-2 rounded-full transition-all ${
+                    selectedService === service
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60'
+                  }`}
+                >
+                  {service}
+                </button>
+              ))}
             </div>
             {selectedService && (
               <p className="text-center text-gray-400 mt-4">
