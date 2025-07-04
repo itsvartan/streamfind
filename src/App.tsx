@@ -119,6 +119,8 @@ function App() {
       const formattedMovies = await Promise.all(
         newMovies.map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
+          // For trending movies, we need to fetch sources separately
+          // For now, we'll just format without sources
           return formatMovie(movie, tmdbData);
         })
       );
@@ -157,13 +159,18 @@ function App() {
 
   // Format movie data
   const formatMovie = (watchmodeData: any, tmdbData: any): Movie => {
+    // Debug logging for first few movies
+    if (movies.length < 3) {
+      console.log('Watchmode data:', watchmodeData);
+    }
+    
     return {
       id: String(watchmodeData.id),
       title: watchmodeData.title,
       year: watchmodeData.year || new Date().getFullYear(),
       poster: tmdbData?.poster_path 
         ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`
-        : 'https://via.placeholder.com/500x750?text=No+Poster',
+        : watchmodeData.poster_url || 'https://via.placeholder.com/500x750?text=No+Poster',
       overview: tmdbData?.overview || watchmodeData.plot_overview || 'No description available.',
       rating: tmdbData?.vote_average || watchmodeData.user_rating || 0,
       runtime: tmdbData?.runtime ? `${Math.floor(tmdbData.runtime / 60)}h ${tmdbData.runtime % 60}m` : 'N/A',
@@ -180,15 +187,24 @@ function App() {
       387: 'Max',
       371: 'Apple TV+',
       389: 'Paramount+',
-      386: 'Peacock'
+      386: 'Peacock',
+      26: 'Hulu' // Adding Hulu's actual ID
     };
 
     const uniqueSources = new Set<string>();
-    sources.forEach(source => {
-      if (serviceMap[source.source_id]) {
-        uniqueSources.add(serviceMap[source.source_id]);
-      }
-    });
+    
+    if (Array.isArray(sources)) {
+      sources.forEach(source => {
+        // Log to debug what we're receiving
+        if (source.source_id && !serviceMap[source.source_id]) {
+          console.log('Unknown source ID:', source.source_id, source);
+        }
+        
+        if (serviceMap[source.source_id]) {
+          uniqueSources.add(serviceMap[source.source_id]);
+        }
+      });
+    }
 
     return Array.from(uniqueSources);
   };
@@ -267,7 +283,13 @@ function App() {
       const formattedMovies = await Promise.all(
         movies.map(async (movie: any) => {
           const tmdbData = await fetchTMDBData(movie.tmdb_id);
-          return formatMovie(movie, tmdbData);
+          // When filtering by service, we know these movies are on that service
+          const movieData = formatMovie(movie, tmdbData);
+          if (selectedService) {
+            // Add the selected service to sources since we filtered by it
+            movieData.streamingSources = [selectedService];
+          }
+          return movieData;
         })
       );
       
@@ -445,7 +467,7 @@ function App() {
                           </span>
                         ))
                       ) : (
-                        <span className="text-xs text-gray-500">No streaming</span>
+                        <span className="text-xs text-gray-500">Check details</span>
                       )}
                       {movie.streamingSources.length > 3 && (
                         <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 
